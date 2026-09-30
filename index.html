@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ocrlook</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --card: #ffffff;
+      --border: #d1d5db;
+      --text: #111827;
+      --muted: #6b7280;
+      --primary: #111827;
+      --primary-hover: #374151;
+      --success: #059669;
+      --danger: #dc2626;
+      --radius: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: #f9fafb;
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      letter-spacing: -0.02em;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 32px;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      margin-bottom: 16px;
+    }
+
+    .card h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+    }
+
+    label {
+      display: block;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    select,
+    input,
+    textarea {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 9px 12px;
+      color: var(--text);
+      font-size: 0.9rem;
+      margin-bottom: 14px;
+      outline: none;
+      box-shadow: none;
+      transition: border-color 0.15s;
+    }
+
+    select:focus,
+    input:focus,
+    textarea:focus {
+      outline: none;
+      box-shadow: none;
+      border-color: #9ca3af;
+    }
+
+    textarea {
+      min-height: 88px;
+      resize: vertical;
+      font-family: inherit;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 600px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 18px;
+      border: 1px solid transparent;
+      border-radius: var(--radius);
+      font-size: 0.875rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, border-color 0.15s;
+      outline: none;
+      box-shadow: none;
+    }
+
+    .btn:focus {
+      outline: none;
+      box-shadow: none;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      border-color: var(--primary-hover);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover {
+      background: #f3f4f6;
+    }
+
+    .btn-danger {
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: #fef2f2;
+      border-color: #fca5a5;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .upload-zone {
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 36px 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 14px;
+      background: #fafafa;
+    }
+
+    .upload-zone:hover,
+    .upload-zone.dragover {
+      border-color: #9ca3af;
+      background: #f3f4f6;
+    }
+
+    .upload-zone img {
+      max-width: 100%;
+      max-height: 260px;
+      border-radius: 4px;
+      margin-top: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .upload-zone p {
+      color: var(--muted);
+      font-size: 0.875rem;
+    }
+
+    .status {
+      font-size: 0.8rem;
+      padding: 8px 12px;
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+      display: none;
+      border: 1px solid transparent;
+    }
+
+    .status.show {
+      display: block;
+    }
+
+    .status.info {
+      background: #f3f4f6;
+      color: #374151;
+      border-color: #e5e7eb;
+    }
+
+    .status.success {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+
+    .status.error {
+      background: #fef2f2;
+      color: #991b1b;
+      border-color: #fecaca;
+    }
+
+    pre {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      overflow-x: auto;
+      font-size: 0.825rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text);
+      font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+    }
+
+    .key-status {
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: -6px;
+      margin-bottom: 14px;
+    }
+
+    .key-status.saved {
+      color: var(--success);
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .page-select-wrap {
+      margin-bottom: 14px;
+      display: none;
+    }
+
+    .page-select-wrap.show {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>ocrlook</h1>
+    <p class="subtitle">Upload an image or PDF. AI extracts structured data into clean JSON. API keys stay in your browser.</p>
+
+    <div class="card">
+      <h2>API Keys</h2>
+      <div class="row">
+        <div>
+          <label>Provider</label>
+          <select id="provider">
+            <option value="openrouter">OpenRouter</option>
+            <option value="openai">OpenAI</option>
+            <option value="gemini">Google Gemini</option>
+            <option value="claude">Anthropic Claude</option>
+            <option value="deepseek">DeepSeek</option>
+          </select>
+        </div>
+        <div>
+          <label>API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-..." />
+        </div>
+      </div>
+      <div class="key-status" id="keyStatus">No key saved yet</div>
+      <div class="btn-group">
+        <button class="btn btn-primary" onclick="saveKey()">Save Key</button>
+        <button class="btn btn-danger" onclick="clearKey()">Clear Key</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Schema (Optional)</h2>
+      <label>Enter keys you want (one per line or comma separated). Leave empty for auto line_1, line_2...</label>
+      <textarea id="schema" placeholder="invoice_number&#10;date&#10;total_amount&#10;vendor_name"></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Custom Instructions (Optional)</h2>
+      <label>Extra instructions for the AI. These will be followed strictly along with the schema.</label>
+      <textarea id="customPrompt" placeholder="Example: Prefer values written in bold. Ignore handwritten notes. Date format should be YYYY-MM-DD."></textarea>
+    </div>
+
+    <div class="card">
+      <h2>Upload Image or PDF</h2>
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <p>Click or drag and drop an image or PDF here</p>
+        <img id="preview" class="hidden" alt="Preview" />
+      </div>
+      <input type="file" id="fileInput" accept="image/*,application/pdf" class="hidden" />
+
+      <div class="page-select-wrap" id="pageSelectWrap">
+        <label>PDF Page</label>
+        <select id="pageSelect"></select>
+      </div>
+
+      <div class="status" id="status"></div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="extractBtn" onclick="extract()" disabled>Extract JSON</button>
+        <button class="btn btn-secondary" onclick="copyResult()" id="copyBtn" disabled>Copy JSON</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Result</h2>
+      <pre id="result">// Result will appear here</pre>
+    </div>
+  </div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+    const STORAGE_KEY = "ocrlook_keys";
+
+    let currentBase64 = null;
+    let currentMime = null;
+    let currentPdf = null;
+    let currentPdfName = "";
+
+    function getKeys() {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
+      } catch {
+        return {};
+      }
+    }
+
+    function saveKey() {
+      const provider = document.getElementById("provider").value;
+      const key = document.getElementById("apiKey").value.trim();
+      if (!key) {
+        showStatus("Please enter an API key", "error");
+        return;
+      }
+      const keys = getKeys();
+      keys[provider] = key;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
+      updateKeyStatus();
+      showStatus("Key saved to localStorage", "success");
+    }
+
+    function clearKey() {
+      const provider = document.getElementById("provider").value;
+      const keys = getKeys();
+      delete keys[provider];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
+      document.getElementById("apiKey").value = "";
+      updateKeyStatus();
+      showStatus("Key cleared", "info");
+    }
+
+    function updateKeyStatus() {
+      const provider = document.getElementById("provider").value;
+      const keys = getKeys();
+      const el = document.getElementById("keyStatus");
+      if (keys[provider]) {
+        el.textContent = "Key saved for " + provider;
+        el.classList.add("saved");
+        document.getElementById("apiKey").value = keys[provider].slice(0, 8) + "••••••••";
+      } else {
+        el.textContent = "No key saved for this provider";
+        el.classList.remove("saved");
+        document.getElementById("apiKey").value = "";
+      }
+    }
+
+    document.getElementById("provider").addEventListener("change", updateKeyStatus);
+    updateKeyStatus();
+
+    const uploadZone = document.getElementById("uploadZone");
+    const fileInput = document.getElementById("fileInput");
+    const preview = document.getElementById("preview");
+    const pageSelectWrap = document.getElementById("pageSelectWrap");
+    const pageSelect = document.getElementById("pageSelect");
+
+    fileInput.addEventListener("change", (e) => handleFile(e.target.files[0]));
+
+    uploadZone.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      uploadZone.classList.add("dragover");
+    });
+    uploadZone.addEventListener("dragleave", () => uploadZone.classList.remove("dragover"));
+    uploadZone.addEventListener("drop", (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove("dragover");
+      handleFile(e.dataTransfer.files[0]);
+    });
+
+    pageSelect.addEventListener("change", async () => {
+      if (currentPdf) {
+        await renderPdfPage(parseInt(pageSelect.value, 10));
+      }
+    });
+
+    async function handleFile(file) {
+      if (!file) return;
+
+      currentPdf = null;
+      currentPdfName = "";
+      pageSelectWrap.classList.remove("show");
+      pageSelect.innerHTML = "";
+
+      if (file.type.startsWith("image/")) {
+        const reader = new FileReader();
+        reader.onload = () => {
+          currentBase64 = reader.result.split(",")[1];
+          currentMime = file.type;
+          preview.src = reader.result;
+          preview.classList.remove("hidden");
+          document.getElementById("extractBtn").disabled = false;
+          showStatus("Image loaded: " + file.name, "success");
+        };
+        reader.readAsDataURL(file);
+        return;
+      }
+
+      if (file.type === "application/pdf") {
+        showStatus("Loading PDF...", "info");
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          currentPdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+          currentPdfName = file.name;
+
+          pageSelect.innerHTML = "";
+          for (let i = 1; i <= currentPdf.numPages; i++) {
+            const opt = document.createElement("option");
+            opt.value = i;
+            opt.textContent = "Page " + i + " of " + currentPdf.numPages;
+            pageSelect.appendChild(opt);
+          }
+          pageSelectWrap.classList.add("show");
+
+          await renderPdfPage(1);
+        } catch (err) {
+          console.error(err);
+          showStatus("Failed to load PDF: " + err.message, "error");
+        }
+        return;
+      }
+
+      showStatus("Please select an image or PDF", "error");
+    }
+
+    async function renderPdfPage(pageNum) {
+      if (!currentPdf) return;
+
+      showStatus("Rendering page " + pageNum + "...", "info");
+
+      try {
+        const page = await currentPdf.getPage(pageNum);
+        const scale = 2;
+        const viewport = page.getViewport({ scale });
+
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("2d");
+        canvas.height = viewport.height;
+        canvas.width = viewport.width;
+
+        await page.render({
+          canvasContext: context,
+          viewport: viewport
+        }).promise;
+
+        const dataUrl = canvas.toDataURL("image/png");
+        currentBase64 = dataUrl.split(",")[1];
+        currentMime = "image/png";
+
+        preview.src = dataUrl;
+        preview.classList.remove("hidden");
+        document.getElementById("extractBtn").disabled = false;
+        showStatus("PDF ready (Page " + pageNum + " of " + currentPdf.numPages + "): " + currentPdfName, "success");
+      } catch (err) {
+        console.error(err);
+        showStatus("Failed to render page: " + err.message, "error");
+      }
+    }
+
+    function showStatus(msg, type = "info") {
+      const el = document.getElementById("status");
+      el.textContent = msg;
+      el.className = "status show " + type;
+    }
+
+    function buildPrompt(schemaText, customText) {
+      const keys = schemaText
+        .split(/[\n,]+/)
+        .map(k => k.trim())
+        .filter(Boolean);
+
+      const custom = customText.trim();
+
+      let prompt = "";
+
+      if (keys.length === 0) {
+        prompt = `You are a precise document data extraction engine.
+
+Task:
+Extract ALL readable text content from the provided image, line by line.
+
+Output rules:
+- Return ONLY a valid JSON object
+- Use this exact structure:
+{
+  "line_1": "text of first line",
+  "line_2": "text of second line",
+  ...
+}
+- Do not add any explanation, markdown, or extra text
+- Keep the original text as accurate as possible`;
+      } else {
+        prompt = `You are a precise document data extraction engine.
+
+Task:
+Extract values from the provided image that best match the requested keys.
+
+Requested keys:
+${JSON.stringify(keys)}
+
+Matching rules (very important):
+1. For each requested key, find the CLOSEST and MOST RELEVANT value present in the image.
+2. Prefer exact label matches first (e.g. "Invoice No" → invoice_number).
+3. If exact match is not found, use the nearest semantic match (e.g. "Bill Date" → date, "Grand Total" → total_amount).
+4. Never put a value under the wrong key. Accuracy is more important than filling every field.
+5. If no reasonably matching value exists for a key, set that key to null.
+6. Do not invent or guess values that are not clearly present.
+7. Keep numbers, dates, and codes exactly as written in the document.
+
+Output rules:
+- Return ONLY a valid JSON object
+- Use EXACTLY the key names provided above
+- No extra keys
+- No explanation, no markdown, pure JSON only`;
+      }
+
+      if (custom) {
+        prompt += `\n\nAdditional user instructions (follow these strictly):\n${custom}`;
+      }
+
+      return prompt;
+    }
+
+    async function callOpenAI(apiKey, base64, mime, prompt) {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + apiKey
+        },
+        body: JSON.stringify({
+          model: "gpt-4o",
+          messages: [{
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: "data:" + mime + ";base64," + base64 } }
+            ]
+          }],
+          response_format: { type: "json_object" },
+          max_tokens: 2000
+        })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      return data.choices[0].message.content;
+    }
+
+    async function callGemini(apiKey, base64, mime, prompt) {
+      const res = await fetch(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + apiKey,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: prompt },
+                { inline_data: { mime_type: mime, data: base64 } }
+              ]
+            }],
+            generationConfig: { responseMimeType: "application/json" }
+          })
+        }
+      );
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      return data.candidates[0].content.parts[0].text;
+    }
+
+    async function callClaude(apiKey, base64, mime, prompt) {
+      const res = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: "claude-3-5-sonnet-20241022",
+          max_tokens: 2000,
+          messages: [{
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: mime, data: base64 } },
+              { type: "text", text: prompt }
+            ]
+          }]
+        })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      return data.content[0].text;
+    }
+
+    async function callDeepSeek(apiKey, base64, mime, prompt) {
+      const res = await fetch("https://api.deepseek.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + apiKey
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [{
+            role: "user",
+            content: [
+              { type: "text", text: prompt + "\n\n[Note: Image provided as base64 but vision may be limited]" }
+            ]
+          }],
+          response_format: { type: "json_object" },
+          max_tokens: 2000
+        })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      return data.choices[0].message.content;
+    }
+
+    async function callOpenRouter(apiKey, base64, mime, prompt) {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + apiKey,
+          "HTTP-Referer": window.location.origin,
+          "X-Title": "ocrlook"
+        },
+        body: JSON.stringify({
+          model: "openai/gpt-4o",
+          messages: [{
+            role: "user",
+            content: [
+              { type: "text", text: prompt },
+              { type: "image_url", image_url: { url: "data:" + mime + ";base64," + base64 } }
+            ]
+          }],
+          response_format: { type: "json_object" },
+          max_tokens: 2000
+        })
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      return data.choices[0].message.content;
+    }
+
+    async function extract() {
+      const provider = document.getElementById("provider").value;
+      const keys = getKeys();
+      const apiKey = keys[provider];
+
+      if (!apiKey) {
+        showStatus("Please save an API key for this provider first", "error");
+        return;
+      }
+      if (!currentBase64) {
+        showStatus("Please upload an image or PDF first", "error");
+        return;
+      }
+
+      const schemaText = document.getElementById("schema").value;
+      const customText = document.getElementById("customPrompt").value;
+      const prompt = buildPrompt(schemaText, customText);
+
+      const btn = document.getElementById("extractBtn");
+      btn.disabled = true;
+      btn.textContent = "Extracting...";
+      showStatus("Sending to AI...", "info");
+      document.getElementById("result").textContent = "// Waiting for response...";
+
+      try {
+        let raw;
+        if (provider === "openai") raw = await callOpenAI(apiKey, currentBase64, currentMime, prompt);
+        else if (provider === "gemini") raw = await callGemini(apiKey, currentBase64, currentMime, prompt);
+        else if (provider === "claude") raw = await callClaude(apiKey, currentBase64, currentMime, prompt);
+        else if (provider === "deepseek") raw = await callDeepSeek(apiKey, currentBase64, currentMime, prompt);
+        else if (provider === "openrouter") raw = await callOpenRouter(apiKey, currentBase64, currentMime, prompt);
+
+        let cleaned = raw.trim();
+        if (cleaned.startsWith("```")) {
+          cleaned = cleaned.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+        }
+
+        const parsed = JSON.parse(cleaned);
+        document.getElementById("result").textContent = JSON.stringify(parsed, null, 2);
+        document.getElementById("copyBtn").disabled = false;
+        showStatus("Extraction successful", "success");
+      } catch (err) {
+        console.error(err);
+        document.getElementById("result").textContent = "// Error:\n" + err.message;
+        showStatus("Failed: " + err.message.slice(0, 120), "error");
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Extract JSON";
+      }
+    }
+
+    function copyResult() {
+      const text = document.getElementById("result").textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        showStatus("JSON copied to clipboard", "success");
+      });
+    }
+  </script>
+</body>
+</html>
