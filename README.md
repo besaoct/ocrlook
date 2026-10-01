@@ -31,15 +31,15 @@ For PDFs, ocrlook renders the selected page to an image first, then sends that i
 
 ---
 
-## Supported Providers
+## Supported Providers & Where to Get API Keys
 
-| Provider       | Notes                              |
-|----------------|------------------------------------|
-| OpenRouter     | Recommended — access many models   |
-| OpenAI         | GPT-4o                             |
-| Google Gemini  | Gemini 2.0 Flash                   |
-| Anthropic      | Claude 3.5 Sonnet                  |
-| DeepSeek       | Limited vision support             |
+| Provider | Model Used | Get API Key | Notes & Free Tier |
+|---|---|---|---|
+| **Google Gemini** | `gemini-2.0-flash` | [Google AI Studio](https://aistudio.google.com/app/apikey) | **Free tier available** (up to 15 RPM / 1M TPM free), ultra-fast multimodal OCR |
+| **OpenRouter** | `openai/gpt-4o` | [OpenRouter Keys](https://openrouter.ai/settings/keys) | Access multiple vision models via one unified key; pay-as-you-go or free models |
+| **OpenAI** | `gpt-4o` | [OpenAI Platform](https://platform.openai.com/api-keys) | Multimodal vision flagship; requires prepaid OpenAI API credits |
+| **Anthropic Claude** | `claude-3-5-sonnet-20241022` | [Anthropic Console](https://console.anthropic.com/settings/keys) | High precision for complex tables & layouts; requires Anthropic credits |
+| **DeepSeek** | `deepseek-chat` | [DeepSeek Platform](https://platform.deepseek.com/api_keys) | Very cost-effective; note: DeepSeek API currently has limited native vision |
 
 ---
 

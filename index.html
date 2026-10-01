@@ -278,6 +278,122 @@
     .page-select-wrap.show {
       display: block;
     }
+
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .label-row label {
+      margin-bottom: 0;
+    }
+
+    .provider-link-inline {
+      font-size: 0.775rem;
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.15s;
+    }
+
+    .provider-link-inline:hover {
+      color: #1d4ed8;
+      text-decoration: underline;
+    }
+
+    .provider-help-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 0.825rem;
+    }
+
+    .provider-help-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .provider-tags {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .provider-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+      padding: 2px 7px;
+      border-radius: 4px;
+    }
+
+    .provider-model-tag {
+      font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+      font-size: 0.75rem;
+      color: #374151;
+      background: #ffffff;
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .provider-link {
+      color: #2563eb;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.8rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .provider-link:hover {
+      color: #1d4ed8;
+      text-decoration: underline;
+    }
+
+    .provider-help-desc {
+      color: #374151;
+      line-height: 1.45;
+      margin-bottom: 6px;
+    }
+
+    .provider-help-meta {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 0.775rem;
+      border-top: 1px dashed #e2e8f0;
+      padding-top: 6px;
+      margin-top: 6px;
+    }
+
+    .provider-help-keyhint code {
+      background: #e2e8f0;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-family: "SF Mono", "Fira Code", monospace;
+      font-size: 0.725rem;
+      color: #1e293b;
+    }
   </style>
 </head>
 <body>
@@ -289,7 +405,7 @@
       <h2>API Keys</h2>
       <div class="row">
         <div>
-          <label>Provider</label>
+          <label for="provider">Provider</label>
           <select id="provider">
             <option value="openrouter">OpenRouter</option>
             <option value="openai">OpenAI</option>
@@ -299,10 +415,33 @@
           </select>
         </div>
         <div>
-          <label>API Key</label>
-          <input type="password" id="apiKey" placeholder="sk-..." />
+          <div class="label-row">
+            <label for="apiKey">API Key</label>
+            <a id="providerQuickLink" class="provider-link-inline" target="_blank" rel="noopener noreferrer">Get key ↗</a>
+          </div>
+          <input type="password" id="apiKey" placeholder="sk-..." autocomplete="off" />
         </div>
       </div>
+
+      <div class="provider-help-box" id="providerHelpBox">
+        <div class="provider-help-header">
+          <div class="provider-tags">
+            <span class="provider-badge" id="providerBadge">Multi-Model Gateway</span>
+            <span class="provider-model-tag" id="providerModelTag">Model: openai/gpt-4o</span>
+          </div>
+          <a id="providerHelpLink" class="provider-link" target="_blank" rel="noopener noreferrer">
+            Get OpenRouter API Key ↗
+          </a>
+        </div>
+        <p class="provider-help-desc" id="providerHelpDesc">
+          Access GPT-4o and hundreds of vision models with one unified API key.
+        </p>
+        <div class="provider-help-meta">
+          <span class="provider-help-pricing" id="providerHelpPricing"></span>
+          <span class="provider-help-keyhint" id="providerKeyHint"></span>
+        </div>
+      </div>
+
       <div class="key-status" id="keyStatus">No key saved yet</div>
       <div class="btn-group">
         <button class="btn btn-primary" onclick="saveKey()">Save Key</button>
@@ -358,6 +497,69 @@
     let currentPdf = null;
     let currentPdfName = "";
 
+    const PROVIDER_INFO = {
+      openrouter: {
+        name: "OpenRouter",
+        model: "openai/gpt-4o",
+        url: "https://openrouter.ai/settings/keys",
+        linkText: "Get OpenRouter API Key ↗",
+        quickText: "Get key ↗",
+        placeholder: "sk-or-v1-...",
+        badge: "Multi-Model Gateway",
+        info: "Access GPT-4o and hundreds of top vision models with one unified API key. Sign up and create a key in OpenRouter settings.",
+        pricing: "Pay-as-you-go with credits or use available free models.",
+        keyHint: "Key format: <code>sk-or-v1-...</code>"
+      },
+      openai: {
+        name: "OpenAI",
+        model: "gpt-4o",
+        url: "https://platform.openai.com/api-keys",
+        linkText: "Get OpenAI API Key ↗",
+        quickText: "Get key ↗",
+        placeholder: "sk-proj-...",
+        badge: "Multimodal Vision",
+        info: "Extract structured data using OpenAI's flagship GPT-4o multimodal model. Create your secret key in the OpenAI developer platform.",
+        pricing: "Requires OpenAI platform API credits (separate from ChatGPT Plus).",
+        keyHint: "Key format: <code>sk-proj-...</code>"
+      },
+      gemini: {
+        name: "Google Gemini",
+        model: "gemini-2.0-flash",
+        url: "https://aistudio.google.com/app/apikey",
+        linkText: "Get Google AI Studio Key ↗",
+        quickText: "Get free key ↗",
+        placeholder: "AIzaSy...",
+        badge: "Free Tier Available",
+        info: "Ultra-fast multimodal document extraction powered by Gemini 2.0 Flash. Create or copy your API key in Google AI Studio.",
+        pricing: "Generous free tier with up to 15 RPM / 1M TPM at zero cost.",
+        keyHint: "Key format: <code>AIzaSy...</code>"
+      },
+      claude: {
+        name: "Anthropic Claude",
+        model: "claude-3-5-sonnet-20241022",
+        url: "https://console.anthropic.com/settings/keys",
+        linkText: "Get Anthropic API Key ↗",
+        quickText: "Get key ↗",
+        placeholder: "sk-ant-api...",
+        badge: "High Precision",
+        info: "Top-tier extraction quality for complex tables and documents using Claude 3.5 Sonnet. Generate your key in Anthropic Console settings.",
+        pricing: "Requires Anthropic Console account and prepaid credits.",
+        keyHint: "Key format: <code>sk-ant-...</code>"
+      },
+      deepseek: {
+        name: "DeepSeek",
+        model: "deepseek-chat",
+        url: "https://platform.deepseek.com/api_keys",
+        linkText: "Get DeepSeek API Key ↗",
+        quickText: "Get key ↗",
+        placeholder: "sk-...",
+        badge: "Cost-Effective",
+        info: "Fast text extraction via DeepSeek Chat API. Obtain your API key from the DeepSeek Open Platform dashboard.",
+        pricing: "Note: DeepSeek API currently has limited native image vision support compared to GPT-4o or Gemini.",
+        keyHint: "Key format: <code>sk-...</code>"
+      }
+    };
+
     function getKeys() {
       try {
         return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {};
@@ -368,42 +570,78 @@
 
     function saveKey() {
       const provider = document.getElementById("provider").value;
-      const key = document.getElementById("apiKey").value.trim();
+      const keyInput = document.getElementById("apiKey");
+      const key = keyInput.value.trim();
+      const info = PROVIDER_INFO[provider] || { name: provider };
       if (!key) {
-        showStatus("Please enter an API key", "error");
+        showStatus("Please enter an API key for " + info.name, "error");
         return;
       }
       const keys = getKeys();
+      if (key.includes("••••••••")) {
+        if (keys[provider]) {
+          showStatus("Key already saved for " + info.name, "info");
+          return;
+        }
+      }
       keys[provider] = key;
       localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
       updateKeyStatus();
-      showStatus("Key saved to localStorage", "success");
+      showStatus("Key saved for " + info.name + " to localStorage", "success");
     }
 
     function clearKey() {
       const provider = document.getElementById("provider").value;
       const keys = getKeys();
+      const info = PROVIDER_INFO[provider] || { name: provider };
       delete keys[provider];
       localStorage.setItem(STORAGE_KEY, JSON.stringify(keys));
       document.getElementById("apiKey").value = "";
       updateKeyStatus();
-      showStatus("Key cleared", "info");
+      showStatus("Key cleared for " + info.name, "info");
     }
 
     function updateKeyStatus() {
       const provider = document.getElementById("provider").value;
       const keys = getKeys();
       const el = document.getElementById("keyStatus");
+      const info = PROVIDER_INFO[provider] || PROVIDER_INFO.openrouter;
+
+      document.getElementById("providerBadge").textContent = info.badge;
+      document.getElementById("providerModelTag").textContent = "Model: " + info.model;
+
+      const helpLink = document.getElementById("providerHelpLink");
+      helpLink.href = info.url;
+      helpLink.textContent = info.linkText;
+
+      const quickLink = document.getElementById("providerQuickLink");
+      quickLink.href = info.url;
+      quickLink.textContent = info.quickText;
+
+      document.getElementById("providerHelpDesc").textContent = info.info;
+      document.getElementById("providerHelpPricing").textContent = info.pricing;
+      document.getElementById("providerKeyHint").innerHTML = info.keyHint;
+
+      const apiKeyInput = document.getElementById("apiKey");
+      apiKeyInput.placeholder = info.placeholder;
+
       if (keys[provider]) {
-        el.textContent = "Key saved for " + provider;
+        el.textContent = "Key saved for " + info.name;
         el.classList.add("saved");
-        document.getElementById("apiKey").value = keys[provider].slice(0, 8) + "••••••••";
+        apiKeyInput.value = keys[provider].slice(0, 8) + "••••••••";
       } else {
         el.textContent = "No key saved for this provider";
         el.classList.remove("saved");
-        document.getElementById("apiKey").value = "";
+        apiKeyInput.value = "";
       }
     }
+
+    const apiKeyInputEl = document.getElementById("apiKey");
+    apiKeyInputEl.addEventListener("focus", () => {
+      if (apiKeyInputEl.value.includes("••••••••")) {
+        apiKeyInputEl.select();
+      }
+    });
 
     document.getElementById("provider").addEventListener("change", updateKeyStatus);
     updateKeyStatus();
